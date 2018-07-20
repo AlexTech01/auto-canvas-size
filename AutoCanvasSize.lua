@@ -1,5 +1,7 @@
 local AutoCanvasSize = {}
 
+	local connections = {}
+
 	-- pass all the GuiObjects inside of the UIGridLayout-organized frame. (Direct children)
 	local function GetHorizontalAmount(objs)
 		local horizontal_amount = -1
@@ -44,8 +46,20 @@ local AutoCanvasSize = {}
 		end
 		return amount -- return the current horizontal amount.
 	end
+	
+	function AutoCanvasSize.Disconnect(for_scroller)
+		print("Disconnect")
+		if connections[for_scroller] then
+			for i=1, #connections[for_scroller] do
+				local connection = connections[for_scroller][i]
+				print("Disconnecting a connection")
+				if connection then connection:Disconnect() end
+			end
+			connections[for_scroller] = nil
+		end
+	end
 
-	function AutoCanvasSize.Init(scroller)
+	function AutoCanvasSize.Connect(scroller)
 		local grid = scroller:WaitForChild("UIGridLayout")
 		
 		local function GetGuiObjects()
@@ -67,11 +81,18 @@ local AutoCanvasSize = {}
 			local y_amount = GetVerticalAmount(gui_objs)
 			scroller.CanvasSize = UDim2.new(0,0,0, (cell_size.Y + grid.CellPadding.Y.Offset) * y_amount)
 		end
-		scroller.ChildAdded:Connect(function()
-			spawn(Update) -- it appears the child does not get added until the connection returns (or something of that effect)
-						  -- so, we spawn the Update so it is inclusive of the new child.
-		end)
-		scroller.ChildRemoved:Connect(Update)
+		connections[scroller] = {
+			scroller.AncestryChanged:Connect(function()
+				if not scroller.Parent then
+					AutoCanvasSize.Disconnect(scroller)
+				end
+			end),
+			scroller.ChildAdded:Connect(function()
+				spawn(Update) -- it appears the child does not get added until the connection returns (or something of that effect)
+							  -- so, we spawn the Update so it is inclusive of the new child.
+			end),
+			scroller.ChildRemoved:Connect(Update)
+		}
 	end
 	
 return AutoCanvasSize
