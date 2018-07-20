@@ -1,29 +1,6 @@
 local AutoCanvasSize = {}
 
 	local connections = {}
-
-	-- pass all the GuiObjects inside of the UIGridLayout-organized frame. (Direct children)
-	local function GetHorizontalAmount(objs)
-		local horizontal_amount = -1
-		local absolutes = {}
-		
-		for i=1, #objs do -- loop thru all the frames
-			local o = objs[i]
-			local absolute_y = o.AbsolutePosition.Y
-			if absolutes[absolute_y] then -- if this absolute y exists in the table, add this frame
-				table.insert(absolutes[absolute_y], o) 
-			else
-				absolutes[absolute_y] = {} -- if it doesn't, create it.
-				table.insert(absolutes[absolute_y], o)  -- then add this frame.
-			end
-		end
-		for absolute_y, gui_objs in pairs(absolutes) do -- loop thru the absolutes
-			if #gui_objs > horizontal_amount then -- if this absolute_y has more frames than the current horizontal_amount then, update the horizontal amount
-				horizontal_amount = #gui_objs
-			end
-		end
-		return horizontal_amount -- return the current horizontal amount.
-	end
 	
 	local function GetVerticalAmount(objs)	
 		local amount = -1
