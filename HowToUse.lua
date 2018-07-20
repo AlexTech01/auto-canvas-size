@@ -1,3 +1,5 @@
 local AutoCanvasSize = require(script.Parent:WaitForChild("AutoCanvasSize"))
 
-AutoCanvasSize.Connect(script.Parent)
+local ScrollingFrame = script.Parent
+
+AutoCanvasSize.Connect(ScrollingFrame)
