@@ -1,6 +1,29 @@
 local AutoCanvasSize = {}
 
 	local connections = {}
+
+	-- pass all the GuiObjects inside of the UIGridLayout-organized frame. (Direct children)
+	local function GetHorizontalAmount(objs)
+		local horizontal_amount = -1
+		local absolutes = {}
+		
+		for i=1, #objs do -- loop thru all the frames
+			local o = objs[i]
+			local absolute_y = o.AbsolutePosition.Y
+			if absolutes[absolute_y] then -- if this absolute y exists in the table, add this frame
+				table.insert(absolutes[absolute_y], o) 
+			else
+				absolutes[absolute_y] = {} -- if it doesn't, create it.
+				table.insert(absolutes[absolute_y], o)  -- then add this frame.
+			end
+		end
+		for absolute_y, gui_objs in pairs(absolutes) do -- loop thru the absolutes
+			if #gui_objs > horizontal_amount then -- if this absolute_y has more frames than the current horizontal_amount then, update the horizontal amount
+				horizontal_amount = #gui_objs
+			end
+		end
+		return horizontal_amount -- return the current horizontal amount.
+	end
 	
 	local function GetVerticalAmount(objs)	
 		local amount = -1
@@ -25,11 +48,9 @@ local AutoCanvasSize = {}
 	end
 	
 	function AutoCanvasSize.Disconnect(for_scroller)
-		print("Disconnect")
 		if connections[for_scroller] then
 			for i=1, #connections[for_scroller] do
 				local connection = connections[for_scroller][i]
-				print("Disconnecting a connection")
 				if connection then connection:Disconnect() end
 			end
 			connections[for_scroller] = nil
@@ -37,8 +58,8 @@ local AutoCanvasSize = {}
 	end
 
 	function AutoCanvasSize.Connect(scroller)
-		local grid = scroller:WaitForChild("UIGridLayout")
-		
+		local layout = scroller:FindFirstChildWhichIsA("UIListLayout") or scroller:FindFirstChildWhichIsA("UIGridLayout")
+--		local grid = scroller:WaitForChild("UIGridLayout")
 		local function GetGuiObjects()
 			local objs = {}
 			local c = scroller:GetChildren()
@@ -53,12 +74,10 @@ local AutoCanvasSize = {}
 		
 		-- updates the CanvasSize based on the amount of frames in the frame, along with
 		local function Update()
-			local cell_size = Vector2.new(grid.CellSize.X.Offset, grid.CellSize.Y.Offset)
-			local gui_objs = GetGuiObjects()
-			local y_amount = GetVerticalAmount(gui_objs)
-			scroller.CanvasSize = UDim2.new(0,0,0, (cell_size.Y + grid.CellPadding.Y.Offset) * y_amount)
+			scroller.CanvasSize = UDim2.new(0,layout.AbsoluteContentSize.X,0,layout.AbsoluteContentSize.Y + 10)
 		end
 		connections[scroller] = {
+			layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(Update),
 			scroller.AncestryChanged:Connect(function()
 				if not scroller.Parent then
 					AutoCanvasSize.Disconnect(scroller)
@@ -70,6 +89,7 @@ local AutoCanvasSize = {}
 			end),
 			scroller.ChildRemoved:Connect(Update)
 		}
+		Update()
 	end
 	
 return AutoCanvasSize
