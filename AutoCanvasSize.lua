@@ -57,7 +57,8 @@ local AutoCanvasSize = {}
 		end
 	end
 
-	function AutoCanvasSize.Connect(scroller)
+	function AutoCanvasSize.Connect(scroller, only_y)
+		only_y = only_y~=nil and only_y or true
 		local layout = scroller:FindFirstChildWhichIsA("UIListLayout") or scroller:FindFirstChildWhichIsA("UIGridLayout")
 --		local grid = scroller:WaitForChild("UIGridLayout")
 		local function GetGuiObjects()
@@ -74,7 +75,7 @@ local AutoCanvasSize = {}
 		
 		-- updates the CanvasSize based on the amount of frames in the frame, along with
 		local function Update()
-			scroller.CanvasSize = UDim2.new(0,layout.AbsoluteContentSize.X,0,layout.AbsoluteContentSize.Y + 10)
+			scroller.CanvasSize = UDim2.new(0,only_y and 0 or layout.AbsoluteContentSize.X,0,layout.AbsoluteContentSize.Y + 25)
 		end
 		connections[scroller] = {
 			layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(Update),
